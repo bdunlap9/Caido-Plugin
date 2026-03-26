@@ -1,0 +1,25 @@
+{
+  "name": "backend",
+  "version": "0.0.1",
+  "type": "module",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "generate:parsers": "bash scripts/generate-parsers.sh"
+  },
+  "devDependencies": {
+    "@caido/sdk-backend": "^0.48.1",
+    "shared": "workspace:*",
+    "vitest": "^3.2.3"
+  },
+  "dependencies": {
+    "engine": "workspace:*",
+    "mitt": "^3.0.1",
+    "mutative": "^1.2.0",
+    "zod": "^4.0.5",
+    "@lezer/lr": "1.4.2",
+    "@lezer/generator": "1.8.0",
+    "@lezer/common": "1.2.3"
+  }
+}
