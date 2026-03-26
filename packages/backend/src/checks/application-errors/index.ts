@@ -1,0 +1,97 @@
+import { defineCheck, done, Severity } from "engine";
+
+import { Tags } from "../../types";
+import { bodyMatchesAny } from "../../utils";
+import { keyStrategy } from "../../utils/key";
+
+// Common application error patterns that indicate sensitive information disclosure
+const ERROR_PATTERNS = [
+  // Database errors (specific, not broad)
+  /mysql_fetch_array\(\)/i,
+  /ORA-\d{5}/i,
+  /Microsoft OLE DB Provider for ODBC Drivers/i,
+  /\[Microsoft\]\[ODBC SQL Server Driver\]/i,
+  /SQLServer JDBC Driver/i,
+  /PostgreSQL query failed/i,
+  /Warning: mysql_\w+\(\)/i,
+  /valid MySQL result/i,
+  /MySqlClient\./i,
+
+  // Stack traces (require file path context to avoid FPs)
+  /\.java:\d+\)/i,
+  /\.php on line \d+/i,
+  /\.py", line \d+/i,
+  /\.rb:\d+:in/i,
+  /Traceback \(most recent call last\)/i,
+
+  // Framework errors (specific, not the generic "Warning:" which hits normal pages)
+  /Fatal error:.*in \/.*on line/i,
+  /Parse error:.*in \/.*on line/i,
+  /PHP Fatal error/i,
+  /PHP Parse error/i,
+
+  // ASP.NET errors
+  /Server Error in '\/' Application/i,
+  /System\.Web\.HttpException/i,
+  /System\.Data\.SqlClient\.SqlException/i,
+
+  // Java errors (require class path)
+  /java\.lang\.\w+Exception/i,
+  /Exception in thread "\w+"/i,
+  /Caused by: \w+\.\w+Exception/i,
+
+  // Generic error indicators (specific enough to avoid FPs)
+  /syntax error.*unexpected/i,
+  /internal server error/i,
+  /unhandled exception/i,
+  /runtime error/i,
+  /segmentation fault/i,
+];
+
+export default defineCheck<Record<never, never>>(({ step }) => {
+  step("checkApplicationErrors", (state, context) => {
+    const { response } = context.target;
+
+    if (response === undefined) {
+      return done({ state });
+    }
+
+    // Skip successful responses
+    if (response.getCode() < 400) {
+      return done({ state });
+    }
+
+    if (bodyMatchesAny(response, ERROR_PATTERNS)) {
+      const finding = {
+        name: "Application Error Information Disclosure",
+        description:
+          "The application returned an error message that may contain sensitive information. This can help attackers understand the application's internal structure and identify potential vulnerabilities.",
+        severity: Severity.MEDIUM,
+        correlation: {
+          requestID: context.target.request.getId(),
+          locations: [],
+        },
+      };
+      return done({ state, findings: [finding] });
+    }
+
+    return done({ state });
+  });
+
+  return {
+    metadata: {
+      id: "application-errors",
+      name: "Application Error Information Disclosure",
+      description:
+        "Detects application error messages that may leak sensitive information about the application's internal structure",
+      type: "passive",
+      tags: [Tags.INFORMATION_DISCLOSURE, Tags.ERROR_HANDLING],
+      severities: [Severity.MEDIUM],
+      aggressivity: { minRequests: 0, maxRequests: 0 },
+    },
+    initState: () => ({}),
+    dedupeKey: keyStrategy().withHost().withPort().withPath().build(),
+    when: (context) =>
+      context.response !== undefined && context.response.getCode() >= 400,
+  };
+});
