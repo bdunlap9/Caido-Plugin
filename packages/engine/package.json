@@ -1,0 +1,25 @@
+{
+  "name": "engine",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@caido/sdk-backend": "^0.48.1",
+    "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "@supercharge/promise-pool": "^3.2.0",
+    "batching-toposort-ts": "^1.0.0",
+    "html5parser": "^2.0.2",
+    "mitt": "^3.0.1"
+  }
+}
