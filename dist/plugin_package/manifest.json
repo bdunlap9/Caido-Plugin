@@ -1,0 +1,29 @@
+{
+  "id": "scanner",
+  "name": "Weeke's Vuln Scanner + HyperCrawler",
+  "version": "2.0.0",
+  "description": "Passive and active vulnerability scanner with integrated autonomous crawler",
+  "author": {
+    "name": "Weeke"
+  },
+  "links": {},
+  "plugins": [
+    {
+      "id": "backend",
+      "kind": "backend",
+      "name": "backend",
+      "entrypoint": "backend/index.js",
+      "runtime": "javascript"
+    },
+    {
+      "id": "frontend",
+      "kind": "frontend",
+      "name": "frontend",
+      "entrypoint": "frontend/index.js",
+      "style": "frontend/index.css",
+      "backend": {
+        "id": "backend"
+      }
+    }
+  ]
+}
